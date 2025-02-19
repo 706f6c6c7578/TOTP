@@ -2,11 +2,14 @@ $ totp -h
 Usage of totp:
   -account string
         The account name for the TOTP key (default "user@example.com")
+  -algorithm string
+        The hashing algorithm to use (SHA1, SHA256, SHA512) (default "SHA1")
+  -digits int
+        The number of digits in the passcode (6 or 8, default: 6) (default 6)
   -issuer string
         The issuer for the TOTP key (default "example.com")
   -skew int
         The skew value for TOTP validation (default: 1) (default 1)
-
 $ totp
 
 TOTP Authentication Tool

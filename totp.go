@@ -27,22 +27,22 @@ func promptForInput(prompt string) string {
 }
 
 // GeneratePassCode generates the current TOTP passcode based on the secret.
-func GeneratePassCode(secret string, skew uint) (string, error) {
+func GeneratePassCode(secret string, skew uint, algorithm otp.Algorithm, digits otp.Digits) (string, error) {
     return totp.GenerateCodeCustom(secret, time.Now(), totp.ValidateOpts{
         Period:    30,
         Skew:      skew,
-        Digits:    otp.DigitsSix,
-        Algorithm: otp.AlgorithmSHA1,
+        Digits:    digits,
+        Algorithm: algorithm,
     })
 }
 
 // ValidatePassCode checks if the provided passcode is valid.
-func ValidatePassCode(passcode, secret string, skew uint) bool {
+func ValidatePassCode(passcode, secret string, skew uint, algorithm otp.Algorithm, digits otp.Digits) bool {
     valid, err := totp.ValidateCustom(passcode, secret, time.Now(), totp.ValidateOpts{
         Period:    30,
         Skew:      skew,
-        Digits:    otp.DigitsSix,
-        Algorithm: otp.AlgorithmSHA1,
+        Digits:    digits,
+        Algorithm: algorithm,
     })
     if err != nil {
         return false
@@ -51,11 +51,40 @@ func ValidatePassCode(passcode, secret string, skew uint) bool {
 }
 
 func main() {
-    // Flags for Issuer, Account Name, and Skew
+    // Flags for Issuer, Account Name, Skew, Algorithm, and Digits
     issuer := flag.String("issuer", "example.com", "The issuer for the TOTP key")
     accountName := flag.String("account", "user@example.com", "The account name for the TOTP key")
     skew := flag.Int("skew", 1, "The skew value for TOTP validation (default: 1)")
+    algorithm := flag.String("algorithm", "SHA1", "The hashing algorithm to use (SHA1, SHA256, SHA512)")
+    digits := flag.Int("digits", 6, "The number of digits in the passcode (6 or 8, default: 6)")
+
     flag.Parse()
+
+    // Convert the algorithm flag to an otp.Algorithm type
+    var algo otp.Algorithm
+    switch *algorithm {
+    case "SHA1":
+        algo = otp.AlgorithmSHA1
+    case "SHA256":
+        algo = otp.AlgorithmSHA256
+    case "SHA512":
+        algo = otp.AlgorithmSHA512
+    default:
+        fmt.Println("Invalid algorithm. Supported values are SHA1, SHA256, and SHA512.")
+        os.Exit(1)
+    }
+
+    // Convert the digits flag to an otp.Digits type
+    var digitType otp.Digits
+    switch *digits {
+    case 6:
+        digitType = otp.DigitsSix
+    case 8:
+        digitType = otp.DigitsEight
+    default:
+        fmt.Println("Invalid number of digits. Supported values are 6 or 8.")
+        os.Exit(1)
+    }
 
     // Main loop to keep the program running
     for {
@@ -73,6 +102,7 @@ func main() {
             key, err := totp.Generate(totp.GenerateOpts{
                 Issuer:      *issuer,
                 AccountName: *accountName,
+                Algorithm:   algo, // Use the selected algorithm
             })
             if err != nil {
                 fmt.Println("Error generating shared secret:", err)
@@ -84,7 +114,7 @@ func main() {
         case "2\n":
             // Option 2: Generate a passcode
             secret := promptForInput("Enter the shared secret: ")
-            passcode, err := GeneratePassCode(secret, uint(*skew))
+            passcode, err := GeneratePassCode(secret, uint(*skew), algo, digitType)
             if err != nil {
                 fmt.Println("Error generating passcode:", err)
                 continue
@@ -95,7 +125,7 @@ func main() {
             // Option 3: Validate a passcode
             secret := promptForInput("Enter the shared secret: ")
             passcode := promptForInput("Enter the passcode to validate: ")
-            if ValidatePassCode(passcode, secret, uint(*skew)) {
+            if ValidatePassCode(passcode, secret, uint(*skew), algo, digitType) {
                 fmt.Println("Valid passcode!")
             } else {
                 fmt.Println("Invalid passcode!")
