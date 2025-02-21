@@ -84,7 +84,7 @@ func main() {
     accountName := flag.String("account", "user@example.com", "The account name for the TOTP key")
     skew := flag.Int("skew", 1, "The skew value for TOTP validation: 1 equals 30 seconds")
     algorithm := flag.String("algorithm", "SHA1", "The hashing algorithm to use (SHA1, SHA256, SHA512)")
-    digits := flag.Int("digits", 6, "The number of digits in the passcode (6 or 8, default: 6)")
+    digits := flag.Int("digits", 6, "The number of digits in the passcode (6 or 8)")
 
     flag.Parse()
 
