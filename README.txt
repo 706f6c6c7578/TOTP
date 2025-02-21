@@ -9,7 +9,7 @@ Usage of totp:
   -issuer string
         The issuer for the TOTP key (default "example.com")
   -skew int
-        The skew value for TOTP validation (default: 1) (default 1)
+        The skew value for TOTP validation: 1 equals 30 seconds (default 1)
 $ totp
 
 TOTP Authentication Tool
